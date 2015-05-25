@@ -1,0 +1,235 @@
+
+1. GET /_search
+{} 
+
+2. GET /_search
+{
+  "from": 30,
+  "size": 10
+}
+
+3. GET /_search
+{
+    "query": YOUR_QUERY_HERE
+}
+
+so -> 1 ==>
+GET /_search
+{
+    "query": {
+        "match_all": {}
+    }
+}
+
+4. 一个查询子句一般使用这种结构：
+
+{
+    QUERY_NAME: {
+        ARGUMENT: VALUE,
+        ARGUMENT: VALUE,...
+    }
+}
+或指向一个指定的字段：
+
+{
+    QUERY_NAME: {
+        FIELD_NAME: {
+            ARGUMENT: VALUE,
+            ARGUMENT: VALUE,...
+        }
+    }
+}
+
+such as:
+GET /_search
+{
+    "query": {
+        "match": {
+            "tweet": "elasticsearch"
+        }
+    }
+}
+
+5. 简单子句(leaf clauses)(比如match子句)用以在将查询字符串与一个字段(或多字段)进行比较
+
+复合子句(compound)用以合并其他的子句。例如，bool子句允许你合并其他的合法子句，无论是must，must_not还是should：
+
+{
+    "bool": {
+        "must":     { "match": { "tweet": "elasticsearch" }},
+        "must_not": { "match": { "name":  "mary" }},
+        "should":   { "match": { "tweet": "full text" }}
+    }
+}
+
+6. term 过滤
+
+term主要用于精确匹配哪些值，比如数字，日期，布尔值或 not_analyzed的字符串(未经分析的文本数据类型)：
+
+    { "term": { "age":    26           }}
+    { "term": { "date":   "2014-09-01" }}
+    { "term": { "public": true         }}
+    { "term": { "tag":    "full_text"  }}
+    
+    terms 过滤
+
+terms 跟 term 有点类似，但 terms 允许指定多个匹配条件。 如果某个字段指定了多个值，那么文档需要一起去做匹配：
+
+{
+    "terms": {
+        "tag": [ "search", "full_text", "nosql" ]
+        }
+}
+
+{
+    "range": {
+        "age": {
+            "gte":  20,
+            "lt":   30
+        }
+    }
+}
+
+exists 和 missing 过滤
+
+exists 和 missing 过滤可以用于查找文档中是否包含指定字段或没有某个字段，类似于SQL语句中的IS_NULL条件
+
+{
+    "exists":   {
+        "field":    "title"
+    }
+}
+
+bool 过滤
+
+bool 过滤可以用来合并多个过滤条件查询结果的布尔逻辑，它包含一下操作符：
+
+must :: 多个查询条件的完全匹配,相当于 and。
+
+must_not :: 多个查询条件的相反匹配，相当于 not。
+
+should :: 至少有一个查询条件匹配, 相当于 or。
+
+这些参数可以分别继承一个过滤条件或者一个过滤条件的数组：
+
+{
+    "bool": {
+        "must":     { "term": { "folder": "inbox" }},
+        "must_not": { "term": { "tag":    "spam"  }},
+        "should": [
+                    { "term": { "starred": true   }},
+                    { "term": { "unread":  true   }}
+        ]
+    }
+}
+
+
+match_all 查询
+
+使用match_all 可以查询到所有文档，是没有查询条件下的默认语句。
+
+{
+    "match_all": {}
+}
+此查询常用于合并过滤条件。 比如说你需要检索所有的邮箱,所有的文档相关性都是相同的，所以得到的_score为1
+
+
+match 查询
+
+match查询是一个标准查询，不管你需要全文本查询还是精确查询基本上都要用到它。
+
+如果你使用 match 查询一个全文本字段，它会在真正查询之前用分析器先分析match一下查询字符：
+
+{
+    "match": {
+        "tweet": "About Search"
+    }
+}
+如果用match下指定了一个确切值，在遇到数字，日期，布尔值或者not_analyzed 的字符串时，它将为你搜索你给定的值：
+
+{ "match": { "age":    26           }}
+{ "match": { "date":   "2014-09-01" }}
+{ "match": { "public": true         }}
+{ "match": { "tag":    "full_text"  }}
+
+
+multi_match 查询
+
+multi_match查询允许你做match查询的基础上同时搜索多个字段：
+
+{
+    "multi_match": {
+        "query":    "full text search",
+        "fields":   [ "title", "body" ]
+    }
+}
+
+7. 过滤一条查询语句
+
+比如说我们有这样一条查询语句:
+
+{
+    "match": {
+        "email": "business opportunity"
+    }
+}
+然后我们想要让这条语句加入 term 过滤，在收信箱中匹配邮件：
+
+{
+    "term": {
+        "folder": "inbox"
+    }
+}
+search API中只能包含 query 语句，所以我们需要用 filtered 来同时包含 "query" 和 "filter" 子句：
+
+{
+    "filtered": {
+        "query":  { "match": { "email": "business opportunity" }},
+        "filter": { "term":  { "folder": "inbox" }}
+    }
+}
+我们在外层再加入 query 的上下文关系：
+
+GET /_search
+{
+    "query": {
+        "filtered": {
+            "query":  { "match": { "email": "business opportunity" }},
+            "filter": { "term": { "folder": "inbox" }}
+        }
+    }
+}
+
+8. validate API 可以验证一条查询语句是否合法。
+
+GET /gb/tweet/_validate/query
+{
+   "query": {
+      "tweet" : {
+         "match" : "really powerful"
+      }
+   }
+}
+
+想知道语句非法的具体错误信息，需要加上 explain 参数：
+
+GET /gb/tweet/_validate/query?explain <1>
+{
+   "query": {
+      "tweet" : {
+         "match" : "really powerful"
+      }
+   }
+}
+
+如果是合法语句的话，使用 explain 参数可以返回一个带有查询语句的可阅读描述， 可以帮助了解查询语句在ES中是如何执行的：
+
+GET /_validate/query?explain
+{
+   "query": {
+      "match" : {
+         "tweet" : "really powerful"
+      }
+   }
+}
+
