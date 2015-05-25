@@ -1,0 +1,86 @@
+1. empty search:
+GET /_search
+
+2. /_search
+
+在所有索引的所有类型中搜索
+
+/gb/_search
+
+在索引gb的所有类型中搜索
+
+/gb,us/_search
+
+在索引gb和us的所有类型中搜索
+
+/g*,u*/_search
+
+在以g或u开头的索引的所有类型中搜索
+
+/gb/user/_search
+
+在索引gb的类型user中搜索
+
+/gb,us/user,tweet/_search
+
+在索引gb和us的类型为user和tweet中搜索
+
+/_all/user,tweet/_search
+
+在所有索引的user和tweet中搜索 search types user and tweet in all indices
+
+3. GET /_search?size=5
+GET /_search?size=5&from=5
+GET /_search?size=5&from=10
+
+4. GET /_all/tweet/_search?q=tweet:elasticsearch
+
+5. GET /_search?q=mary
+
+6. mapping structure:
+GET /gb/_mapping/tweet
+
+7. GET /_analyze?analyzer=standard
+Text to analyze
+
+
+
+
+9. mapping and  change analyzed
+GET /gb/_mapping/tweet
+
+PUT /gb <1>
+{
+  "mappings": {
+    "tweet" : {
+      "properties" : {
+        "tweet" : {
+          "type" :    "string",
+          "index":    "not_analyzed"
+          //"analyzer": "english"
+        },
+        "date" : {
+          "type" :   "date"
+        },
+        "name" : {
+          "type" :   "string"
+        },
+        "user_id" : {
+          "type" :   "long"
+        }
+      }
+    }
+  }
+}
+
+PUT /gb/_mapping/tweet
+{
+  "properties" : {
+    "tag" : {
+      "type" :    "string",
+      "index":    "not_analyzed"
+    }
+  }
+}
+注意到我们不再需要列出所有的已经存在的字段，因为我们没法修改他们。我们的新字段已经被合并至存在的那个映射中。
+
