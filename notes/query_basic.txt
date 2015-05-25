@@ -1,4 +1,7 @@
 http://es.xiaoleilu.com/010_Intro/30_Tutorial_Search.html
+我们可以在curl后加-i参数得到响应头：
+curl -i -XGET http://localhost:9200/website/blog/124?pretty
+
 1. basic search:
 GET /megacorp/employee/_search?q=last_name:Smith
 
@@ -90,4 +93,30 @@ GET /megacorp/employee/_search
         }
     }
 }
+
+
+
+9. return some keys:
+GET /website/blog/123?_source=title,text
+return source only
+GET /website/blog/123/_source
+
+10. GET /_mget
+{
+   "docs" : [
+      {
+         "_index" : "website",
+         "_type" :  "blog",
+         "_id" :    2
+      },
+      {
+         "_index" : "website",
+         "_type" :  "pageviews",
+         "_id" :    1,
+         "_source": "views"
+      }
+   ]
+}
+
+11. 
 
