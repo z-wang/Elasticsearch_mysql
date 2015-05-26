@@ -1,1 +1,82 @@
 1. 
+GET /_search
+{
+    "query" : {
+        "filtered" : {
+            "filter" : { "term" : { "user_id" : 1 }}
+        }
+    },
+    "sort": { "date": { "order": "desc" }}
+}
+
+作为缩写，你可以只指定要排序的字段名称：
+
+    "sort": "number_of_children"
+字段值默认以顺序排列，而 _score 默认以倒序排列。
+
+
+
+2. GET /_search
+{
+    "query" : {
+        "filtered" : {
+            "query":   { "match": { "tweet": "manage text search" }},
+            "filter" : { "term" : { "user_id" : 2 }}
+        }
+    },
+    "sort": [
+        { "date":   { "order": "desc" }},
+        { "_score": { "order": "desc" }}
+    ]
+}
+
+3. 字符查询也支持自定义排序，在查询字符串使用sort参数就可以：
+
+GET /_search?sort=date:desc&sort=_score&q=search
+
+4. 在为一个字段的多个值进行排序的时候， 其实这些值本来是没有固定的排序的-- 一个拥有多值的字段就是一个集合， 你准备以哪一个作为排序依据呢？
+
+对于数字和日期，你可以从多个值中取出一个来进行排序，你可以使用min, max, avg 或 sum这些模式。 比说你可以在 dates 字段中用最早的日期来进行排序：
+
+"sort": {
+    "dates": {
+        "order": "asc",
+        "mode":  "min"
+    }
+}
+
+5. 在 _source 下相同的字符串上排序两次会造成不必要的资源浪费。 而我们想要的是一个字段中同时包含这两种索引方式。 现在我们介绍一个在所有核心字段类型上通用的参数 fields，这样我们就可以改变它的mapping：
+
+"tweet": {
+    "type":     "string",
+    "analyzer": "english"
+}
+改变后的多值字段mapping如下：
+
+"tweet": { <1>
+    "type":     "string",
+    "analyzer": "english",
+    "fields": {
+        "raw": { <2>
+            "type":  "string",
+            "index": "not_analyzed"
+        }
+    }
+}
+<1> tweet 字段用于全文本的 analyzed 索引方式不变。
+
+<2> 新增的 tweet.raw 子字段索引方式是 not_analyzed。
+
+现在，在给数据重建索引后，我们既可以使用 tweet 字段进行全文本搜索，也可以用tweet.raw字段进行排序：
+
+GET /_search
+{
+    "query": {
+        "match": {
+            "tweet": "elasticsearch"
+        }
+    },
+    "sort": "tweet.raw"
+}
+
+6. if/idf
