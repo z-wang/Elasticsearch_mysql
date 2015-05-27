@@ -308,5 +308,4 @@ GET /cars/transactions/_search?search_type=count
 }
 
 
-
 19. 
