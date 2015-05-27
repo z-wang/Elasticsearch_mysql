@@ -24,6 +24,11 @@ es: {
 FROM table_name;
 
 es:
+GET /_search
+{
+    "query":   { "match_all": {}},
+    "_source": [ "title", "created" ]
+}
 
 4. SELECT column_name,column_name
 FROM table_name
@@ -85,6 +90,90 @@ es: {
         }
       }}}}
 
-7. 
+7. SELECT document
+FROM products
+WHERE price BETWEEN 20 AND 40
+
+es: 
+filter: {
+  "range" : {
+    "price" : {
+      "gt" : 20,
+      "lt" : 40
+    }
+  }
+}
+
+##Ranges on Dates
+"range" : {
+"timestamp" : {
+"gt" : "2014-01-01 00:00:00",
+"lt" : "2014-01-07 00:00:00"
+}
+}
+
+"range" : {
+"timestamp" : {
+"gt" : "2014-01-01 00:00:00",
+"lt" : "2014-01-01 00:00:00||+1M"
+}
+}
+
+"range" : {
+"timestamp" : {
+"gte" : "now-1h"
+}
+}
+
+8. SELECT tags
+FROM posts
+WHERE tags IS NOT NULL
+
+Ultimately, this means that a null, [] (an empty array), and [null] are all equivalent.
+They simply don’t exist in the inverted index!
+
+{
+  "query" : {
+    "filtered" : {
+      "filter" : {
+        "exists" : { "field" : "tags" }
+      }
+    }
+  }
+}
+
+9. SELECT tags
+FROM posts
+WHERE tags IS NULL
+
+"query" : {
+  "filtered" : {
+    "filter": {
+      "missing" : { "field" : "tags" }
+    }
+  }
+  }
+  
+  
+##
+aggregation: 
+Buckets
+Collections of documents that meet a criterion
+Metrics
+Statistics calculated on the documents in a bucket
+##
+1. Partition documents by country (bucket).
+2. Then partition each country bucket by gender (bucket).
+3. Then partition each gender bucket by age ranges (bucket).
+4. Finally, calculate the average salary for each age range (metric)
+This will give you the average salary per <country, gender, age> combination. All
+in one request and with one pass over the data!
+
+10.  SELECT COUNT(color)
+FROM table
+GROUP BY color
+
+es: 
+
 
 
