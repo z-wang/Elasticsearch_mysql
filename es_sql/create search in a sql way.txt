@@ -275,3 +275,38 @@ GROUP BY LastName
 HAVING COUNT(Orders.OrderID) > 10;
 
 es:
+
+
+18. group by in group by
+
+es:
+GET /cars/transactions/_search?search_type=count
+{
+  "aggs": {
+    "colors": {
+      "terms": {
+        "field": "color"
+      },
+      "aggs": {
+        "avg_price": {
+          "avg": {
+            "field": "price"
+          }
+        },
+        "make": {
+          "terms": {
+            "field": "make"
+          },
+          "aggs" : {
+            "min_price" : { "min": { "field": "price"} },
+            "max_price" : { "max": { "field": "price"} }
+          }
+        }
+      }
+    }
+  }
+}
+
+
+
+19. 
