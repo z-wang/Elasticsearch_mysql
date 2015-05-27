@@ -153,8 +153,49 @@ WHERE tags IS NULL
     }
   }
   }
-  
-  
+
+10. SELECT column_name, column_name
+FROM table_name
+ORDER BY column_name ASC|DESC, column_name ASC|DESC;
+
+es: 
+{
+    "sort" : [
+        { "post_date" : {"order" : "asc"}},
+        "user",
+        { "name" : "desc" },
+        { "age" : "desc" },
+        "_score"
+    ],
+    "query" : {
+        "term" : { "user" : "kimchy" }
+    }
+}
+
+11. SELECT TOP number|percent column_name(s)
+FROM table_name;
+
+es: 
+
+12. SELECT * FROM Customers
+WHERE City LIKE 's%';
+
+full-text search
+
+13. SELECT DISTINCT City FROM Customers;
+
+es: {
+"size": 0,
+"aggs" : {
+    "langs" : {
+        "terms" : { "field" : "language" }
+    }
+}}
+
+
+
+
+
 ##
 aggregation: 
 Buckets
@@ -169,11 +210,68 @@ Statistics calculated on the documents in a bucket
 This will give you the average salary per <country, gender, age> combination. All
 in one request and with one pass over the data!
 
-10.  SELECT COUNT(color)
+14.  SELECT COUNT(color)
 FROM table
 GROUP BY color
 
-es: 
+es: GET /cars/transactions/_search?search_type=count
+{
+  "aggs" : {
+    "colors" : {
+      "terms" : {
+        "field" : "color"
+      }
+    }
+  }
+}
+
+{
+  "size" : 0,  //make sure hits = []
+  "aggs" : {
+    "colors" : {
+      "terms" : {
+        "field" : "color"
+      }
+    }
+  }
+}
 
 
+15. SQL FUNCTIONS:
+AVG() - Returns the average value
+COUNT() - Returns the number of rows
+FIRST() - Returns the first value
+LAST() - Returns the last value
+MAX() - Returns the largest value
+MIN() - Returns the smallest value
+SUM() - Returns the sum
 
+ES:
+
+16. avg() + group by
+es:
+GET /cars/transactions/_search?search_type=count
+{
+  "aggs": {
+    "colors": {
+      "terms": {
+        "field": "color"
+      },
+      "aggs": {
+        "avg_price": {
+          "avg": {
+            "field": "price"
+          }
+        }
+      }
+    }
+  }
+}
+
+17. SELECT Employees.LastName, COUNT(Orders.OrderID) AS NumberOfOrders FROM (Orders
+INNER JOIN Employees
+ON Orders.EmployeeID=Employees.EmployeeID)
+GROUP BY LastName
+HAVING COUNT(Orders.OrderID) > 10;
+
+es:
