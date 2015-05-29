@@ -19,4 +19,32 @@ PUT /my_store
 }
 }
 
-2. 
+2. 文档唯一标识由四个元数据字段组成：
+
+_id：文档的字符串 ID
+
+_type：文档的类型名
+
+_index：文档所在的索引
+
+_uid：_type 和 _id 连接成的 type#id
+
+默认情况下，_uid 是被保存（可取回）和索引（可搜索）的。_type 字段被索引但是没有保存，_id 和 _index 字段则既没有索引也没有储存，它们并不是真实存在的。
+
+尽管如此，你仍然可以像真实字段一样查询 _id 字段。Elasticsearch 使用 _uid 字段来追溯 _id。虽然你可以修改这些字段的 index 和 store 设置，但是基本上不需要这么做。
+
+_id 字段有一个你可能用得到的设置：path 设置告诉 Elasticsearch 它需要从文档本身的哪个字段中生成 _id
+
+
+3. 日期检测可以通过在根对象上设置 date_detection 为 false 来关闭：
+
+PUT /my_index
+{
+    "mappings": {
+        "my_type": {
+            "date_detection": false
+        }
+    }
+}
+
+4. 
