@@ -77,6 +77,12 @@ es: {
   }
 }
 
+
+if develop in must or or filters, use parallel way
+must:[],
+must:[],
+must_not:[]
+
 6. SELECT product
 FROM products
 WHERE price in [20, 30]
